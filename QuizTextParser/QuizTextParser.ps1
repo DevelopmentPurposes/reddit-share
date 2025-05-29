@@ -33,19 +33,29 @@ $questions = foreach ($question in $questionLines) {
     ## Find the line relating to the question's subject
     $theSubjectLineGroups = ($questionBlock.Line | Select-String -Pattern "^(Subject:)\s(.+)").Matches.Groups
     $theSubject = $theSubjectLineGroups[2].Value
-    
-    # extract the answer options into groups (answer a,b,c,d) and the actual word.
-    $answerA = ($($questionBlock).Line | Select-String -Pattern '^(a).\s(.*)$').Matches.Groups
-    $answerB = ($($questionBlock).Line | Select-String -Pattern '^(b).\s(.*)$').Matches.Groups
-    $answerC = ($($questionBlock).Line | Select-String -Pattern '^(c).\s(.*)$').Matches.Groups
-    $answerD = ($($questionBlock).Line | Select-String -Pattern '^(d).\s(.*)$').Matches.Groups 
 
-    # create the possible answers ordered hashtable
-    $possibleAnswers = [ordered]@{
-        "$($answerA[1].Value)" = $answerA[2].Value
-        "$($answerB[1].Value)" = $answerB[2].Value
-        "$($answerC[1].Value)" = $answerC[2].Value
-        "$($answerD[1].Value)" = $answerD[2].Value
+    # extract the answer options into groups (answer a,b,c,d) and the actual worded answer.
+    $answers = ($($questionBlock).Line | Select-String -Pattern '^(\w).\s(.*)$')
+
+    # initialise ordered hashtable
+    $possibleAnswers = [ordered]@{}
+    
+    # iterate over the answers and add them to the ordered hashtable
+    foreach ($answer in $answers) {
+        # get the groups from the regex matches
+        $answerGroups = $answer.Matches.Groups
+        # get the letter from the letter group        
+        $answerLetter = ($answerGroups[1].Value).ToUpper()
+        # get the answer text from the answer text group
+        $answerText = $answerGroups[2].Value
+
+        # add answer to ordered hashtable if the key doesn't already exist.
+        if (-not($possibleAnswers[$answerLetter])) {
+            $possibleAnswers.Add($answerLetter, $answerText)
+        }
+        else {
+            Write-Host "Answer $answerLetter already exists" -ForegroundColor Red
+        }
     }
 
     ## answer and Explanation Section.

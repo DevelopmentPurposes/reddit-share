@@ -23,13 +23,13 @@ Reason 2
 Reason 3
 Reason 4
 Reason 5
-654. The fastest land animal in th world
+654. The fastest land animal in the world
 Subject: Animals
 a. Cheetah.
 b. Falcon.
 c. Hair.
 d. Tortoise.
-Choice "A" the answerd is the answer.
+Choice "A" the answera is the answer.
 Quick hints for dealing with answerd questions:
 Falcon is a bird
 Tortoise is slow

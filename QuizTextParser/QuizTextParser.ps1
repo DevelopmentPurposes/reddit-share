@@ -1,13 +1,68 @@
+## Functions
+function Get-PossibleAnswers {
+    param (
+        [string[]]$Lines
+    )
+
+    $answers = $Lines | Select-String -Pattern '^(\w)\.\s(.*)$'
+    $possibleAnswers = [ordered]@{}
+
+    foreach ($answer in $answers) {
+        $groups = $answer.Matches.Groups
+        $letter = $groups[1].Value.ToUpper()
+        $text = $groups[2].Value
+
+        if (-not $possibleAnswers[$letter]) {
+            $possibleAnswers.Add($letter, $text)
+        } else {
+            Write-Warning "Duplicate answer key: $letter"
+        }
+    }
+
+    return $possibleAnswers
+}
+
+function Get-CorrectAnswer {
+    param (
+        [string[]]$Lines
+    )
+
+    # Find the line starting with "Choice"
+    [array]$correctAnswerLine = $Lines | Where-Object { $_ -match '^Choice' }
+
+    if (-not $correctAnswerLine) {
+        Write-Warning "No correct answer line found."
+        return $null
+    }
+
+    # Use the first matching line (if multiple)
+    $line = $correctAnswerLine[0]
+
+    # Try to match the expected pattern
+    if ($line -match '^Choice\s\S([a-dA-D])\S\s(.+)$') {
+        return [pscustomobject]@{
+            Letter      = $matches[1].ToUpper()
+            Explanation = $matches[2]
+        }
+    } else {
+        Write-Warning "Correct answer line format unexpected."
+        return $null
+    }
+}
+
+
+
+
 # use get-content and select-string to get lines and line numbers
-$content = Get-Content C:\Users\David\source.txt | Select-String -Pattern "."
+$content = Get-Content C:\Users\David\Documents\Git\Repositories\reddit-share\QuizTextParser\source.txt | Select-String -Pattern "."
 
 # find all the lines that are questions
 $questionLines = $content | select-string -Pattern "(^\d{1,4})"
 
 # loop over each question line and build out powershell object.
-$questions = foreach ($question in $questionLines) {
-    # store the index of the current question
-    $index = [array]::IndexOf($questionLines, $question) 
+$questions = for ($i = 0; $i -lt $questionLines.Count; $i++) {
+    $question = $questionLines[$i]
+    $index = $i  # Explicit index tracking
     
     # only define $nextQuestionLine when it is safe to do so
     if ($index -eq ($questionLines.Count - 1)) {
@@ -35,18 +90,18 @@ $questions = foreach ($question in $questionLines) {
     $theSubject = $theSubjectLineGroups[2].Value
 
     # extract the answer options into groups (answer a,b,c,d) and the actual worded answer.
-    $answers = ($($questionBlock).Line | Select-String -Pattern '^(\w).\s(.*)$')
+    $answers = ($($questionBlock).Line | Select-String -Pattern '^(\w)\.\s(.*)$')
 
     # initialise ordered hashtable
-    $possibleAnswers = [ordered]@{}
+    $possibleAnswers = Get-PossibleAnswers -Lines $questionBlock.Line
     
-    # iterate over the answers and add them to the ordered hashtable
+    <# iterate over the answers and add them to the ordered hashtable
     foreach ($answer in $answers) {
         # get the groups from the regex matches
         $answerGroups = $answer.Matches.Groups
         # get the letter from the letter group        
         $answerLetter = ($answerGroups[1].Value).ToUpper()
-        # get the answer text from the answer text group
+        # get the answer text from the answer text
         $answerText = $answerGroups[2].Value
 
         # add answer to ordered hashtable if the key doesn't already exist.
@@ -57,16 +112,11 @@ $questions = foreach ($question in $questionLines) {
             Write-Host "Answer $answerLetter already exists" -ForegroundColor Red
         }
     }
+        #>
 
     ## answer and Explanation Section.
-    # correct answer line: Find the line so the single letter answer and explanation can be extracted.
-    $theCorrectAnswerLine = ($questionBlock | Select-String -Pattern "^Choice").Line
-    # extract the a-d answer and explanation (save into regex groups)
-    $theCorrectAnswerGroups = ($theCorrectAnswerLine | Select-String -Pattern "^(Choice\s)\S([a-d])\S\s(.+)$").Matches.Groups
-    # get the single letter answer.
-    $theCorrectAnswer = $theCorrectAnswerGroups[2].Value
-    # get the explanation
-    $theCorrectAnswerExplanation = $theCorrectAnswerGroups[3].Value
+    # correct answer line: Find the line so the single letter answer and explanation can be extracted.    
+    $answerAndExplanation = Get-CorrectAnswer -Lines $questionBlock.Line
 
     ## quick hints section.
     # find the quick hints line
@@ -83,8 +133,8 @@ $questions = foreach ($question in $questionLines) {
         subject = $theSubject
         Question = $theQuestion.Line
         Options = $possibleAnswers
-        CorrectAnswer = $theCorrectAnswer.ToUpper()
-        Explanation = $theCorrectAnswerExplanation
+        CorrectAnswer = $answerAndExplanation.Letter
+        Explanation = $answerAndExplanation.Explanation
         QuickHints = $quickHints.Line
     }
     

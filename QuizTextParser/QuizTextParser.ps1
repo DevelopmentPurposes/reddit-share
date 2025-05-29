@@ -50,9 +50,6 @@ function Get-CorrectAnswer {
     }
 }
 
-
-
-
 # use get-content and select-string to get lines and line numbers
 $content = Get-Content C:\Users\David\Documents\Git\Repositories\reddit-share\QuizTextParser\source.txt | Select-String -Pattern "."
 

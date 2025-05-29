@@ -21,7 +21,7 @@ $questions = foreach ($question in $questionLines) {
       
     # store the index of the question line
     $startOfQuestionLine = $question.linenumber - 1
-    
+
     # store the current question line and all lines below until the line before the next question
     $questionBlock = $content[($startOfQuestionLine)..($endOfQuestionLine)]
     
@@ -37,7 +37,7 @@ $questions = foreach ($question in $questionLines) {
     # extract the answer options into groups (answer a,b,c,d) and the actual word.
     $answerA = ($($questionBlock).Line | Select-String -Pattern '^(a).\s(.*)$').Matches.Groups
     $answerB = ($($questionBlock).Line | Select-String -Pattern '^(b).\s(.*)$').Matches.Groups
-    $answerC= ($($questionBlock).Line | Select-String -Pattern '^(c).\s(.*)$').Matches.Groups
+    $answerC = ($($questionBlock).Line | Select-String -Pattern '^(c).\s(.*)$').Matches.Groups
     $answerD = ($($questionBlock).Line | Select-String -Pattern '^(d).\s(.*)$').Matches.Groups 
 
     # create the possible answers ordered hashtable

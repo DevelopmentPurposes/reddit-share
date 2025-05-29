@@ -21,15 +21,7 @@ $questions = foreach ($question in $questionLines) {
       
     # store the index of the question line
     $startOfQuestionLine = $question.linenumber - 1
-        
-    # work out the end line of the current question (Now we have start and end lines of a question block)
-    #if ($nextQuestionIndex -eq ($questionLines.Count)) {
-    #    $endOfQuestionLine = $content[-1].LineNumber
-    #}
-    #else {
-    #    $endOfQuestionLine = $nextQuestionLine.linenumber - 2
-    #}
-
+    
     # store the current question line and all lines below until the line before the next question
     $questionBlock = $content[($startOfQuestionLine)..($endOfQuestionLine)]
     
